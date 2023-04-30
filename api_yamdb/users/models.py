@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from api_yamdb.users.validators import validate_username, validate_username_is_not_me
+from .validators import validate_username, validate_username_is_not_me
 
 USER = 'user'
 ADMIN = 'admin'
