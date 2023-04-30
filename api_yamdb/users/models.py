@@ -1,10 +1,16 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.conf import settings
 
 USER = 'user'
 ADMIN = 'admin'
 MODERATOR = 'moderator'
+
+USER_ROLES = [
+    (USER, USER),
+    (ADMIN, ADMIN),
+    (MODERATOR, MODERATOR),
+]
 
 
 class User(AbstractUser):
@@ -13,6 +19,7 @@ class User(AbstractUser):
                               unique=True,
                               )
     role = models.CharField('Роль',
+                            choices=USER_ROLES,
                             max_length=50,
                             blank=True,
                             default=USER
@@ -23,11 +30,6 @@ class User(AbstractUser):
     confirmation_code = models.CharField(max_length=settings.CONFIRM_CODE_LENGTH,
                                          blank=True
                                          )
-
-    class Meta:
-        ordering = ('id',)
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
 
     def __str__(self):
         return self.username

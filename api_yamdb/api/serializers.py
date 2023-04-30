@@ -5,7 +5,6 @@ from users.models import User
 
 
 class SignupSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = ('email', 'username',)
@@ -16,4 +15,3 @@ class SignupSerializer(serializers.ModelSerializer):
                 '"me" - запрещено использовать как имя пользователя'
             )
         return value
-
