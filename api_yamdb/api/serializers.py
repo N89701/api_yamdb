@@ -1,13 +1,17 @@
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
-from rest_framework.serializers import ValidationError
+from rest_framework.exceptions import ValidationError
 
 from users.models import User
 
 
-class SignupSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('email', 'username',)
+class SignupSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True,
+                                   max_length=254,
+                                   )
+    username = serializers.CharField(required=True,
+                                     max_length=150,
+                                     validators=[UnicodeUsernameValidator()])
 
     def validate_username(self, value):
         if value == 'me':
@@ -15,6 +19,12 @@ class SignupSerializer(serializers.ModelSerializer):
                 '"me" - запрещено использовать как имя пользователя'
             )
         return value
+
+    class Meta:
+        fields = (
+            'username',
+            'email',
+        )
 
 
 class TokenObtainSerializer(serializers.ModelSerializer):
