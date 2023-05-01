@@ -15,3 +15,12 @@ class SignupSerializer(serializers.ModelSerializer):
                 '"me" - запрещено использовать как имя пользователя'
             )
         return value
+
+
+class TokenObtainSerializer(serializers.ModelSerializer):
+    username = serializers.CharField()
+    confirmation_code = serializers.CharField()
+
+    class Meta:
+        model = User
+        fields = ('username', 'confirmation_code')
