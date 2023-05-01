@@ -40,7 +40,7 @@ class TitleGetSerializer(serializers.ModelSerializer):
     rating = serializers.IntegerField()
 
     class Meta:
-        fields = ('id', 'name', 'year', 'rating', 'category', 'genre',)
+        fields = '__all__'
         model = Title
 
 
@@ -82,8 +82,11 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
 
+    def update(self, instance, validated_data):
+        validated_data.pop('role', None)
+        return super().update(instance, validated_data)
+
     class Meta:
         fields = ('username', 'email', 'first_name', 'last_name',
                   'bio', 'role',)
-        read_only_fields = ('role',)
         model = User

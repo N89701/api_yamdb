@@ -29,7 +29,7 @@ class Title(models.Model):
     description = models.TextField(null=True, blank=True)
     genre = models.ManyToManyField(Genre)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    
+
     @property
     def rating(self):
         return self.reviews.aggregate(Avg('score'))
