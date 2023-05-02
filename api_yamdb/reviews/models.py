@@ -1,16 +1,25 @@
 from django.db import models
 from users.models import User
 from django.db.models import Avg
+from .validators import validate_rating
+from django.core.validators import RegexValidator
+
 
 
 class Category(models.Model):
     name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50, unique=True)
+    slug = models.SlugField(
+        max_length=50,
+        unique=True,
+        validators=[RegexValidator(r'^[-a-zA-Z0-9_]+$')] )
 
 
 class Genre(models.Model):
     name = models.CharField(max_length=256)
-    slug = models.SlugField(max_length=50, unique=True)
+    slug = models.SlugField(
+        max_length=50,
+        unique=True,
+        validators=[RegexValidator(r'^[-a-zA-Z0-9_]+$')] )
 
 
 class Title(models.Model):
@@ -41,7 +50,7 @@ class Review(models.Model):
         related_name='reviews'
     )
     text = models.TextField()
-    score = models.IntegerField()
+    score = models.IntegerField(validators=[validate_rating])
     pub_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
