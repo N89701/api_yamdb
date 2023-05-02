@@ -1,20 +1,66 @@
+import random
+import string
+
+from django.conf import settings
+from django.db import IntegrityError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
-
+from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Review, Title
 from users.models import User
-from .filters import TitleFilter
+
+#from .filters import TitleFilter
 from .permissions import (IsAdminOrReadOnly, IsAdminUser,
                           IsOwnerOrAdminOrModerator)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer, SignupSerializer,
+                          TitleGetSerializer, TitleSerializer,
+                          TokenObtainSerializer, UserSerializer)
+from reviews.models import Title
 
-from .serializers import (
-    CategorySerializer, CommentSerializer,
-    GenreSerializer, ReviewSerializer,
-    TitleGetSerializer, TitleSerializer, UserSerializer)
+
+@api_view(['POST'])
+def signup(request):
+    serializer = SignupSerializer(data=request.data)
+    if serializer.is_valid():
+        confirmation_code = ''.join(random.choices(string.ascii_lowercase
+                                                   + string.digits,
+                                                   k=settings.CONFIRM_CODE_LENGTH))
+        username = serializer.initial_data['username']
+        email = serializer.initial_data['email']
+        try:
+            user, created = User.objects.get_or_create(username=username,
+                                                       email=email)
+        except IntegrityError:
+            return Response(
+                'Никнейм уже существует' if
+                User.objects.filter(username='username').exists()
+                else 'Email уже существует',
+                status=status.HTTP_400_BAD_REQUEST)
+        user.confirmation_code = confirmation_code
+        user.save()
+        user.email_user('Код подтверждения', confirmation_code)
+        return Response(request.data, status.HTTP_200_OK)
+    return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def obtain_token(request):
+    serializer = TokenObtainSerializer(data=request.data)
+    if serializer.is_valid():
+        username = serializer.validated_data['username']
+        confirmation_code = serializer.validated_data['confirmation_code']
+        user = get_object_or_404(User, username=username)
+        if user.confirmation_code == confirmation_code:
+            token = AccessToken.for_user(user)
+            return Response({'token': str(token)}, status.HTTP_200_OK)
+        return Response({'error': 'Invalid confirmation code'},
+                        status.HTTP_400_BAD_REQUEST)
+    return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
 
 class CategoryViewSet(mixins.CreateModelMixin,
@@ -42,11 +88,11 @@ class GenreViewSet(mixins.CreateModelMixin,
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
+    queryset = Title.objects.all()
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
-    filterset_class = TitleFilter
+    #filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
