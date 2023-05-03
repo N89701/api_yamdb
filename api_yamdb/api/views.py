@@ -3,12 +3,10 @@ import string
 
 from django.conf import settings
 from django.db import IntegrityError
-from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import action, api_view
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Review, Title
@@ -27,9 +25,12 @@ from .serializers import (CategorySerializer, CommentSerializer,
 def signup(request):
     serializer = SignupSerializer(data=request.data)
     if serializer.is_valid():
-        confirmation_code = ''.join(random.choices(string.ascii_lowercase
-                                                   + string.digits,
-                                                   k=settings.CONFIRM_CODE_LENGTH))
+        confirmation_code = ''.join(
+            random.choices(
+                string.ascii_lowercase + string.digits,
+                k=settings.CONFIRM_CODE_LENGTH
+            )
+        )
         username = serializer.initial_data['username']
         email = serializer.initial_data['email']
         try:
@@ -73,7 +74,6 @@ class CategoryViewSet(mixins.CreateModelMixin,
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    pagination_class = PageNumberPagination
 
 
 class GenreViewSet(mixins.CreateModelMixin,
@@ -86,12 +86,10 @@ class GenreViewSet(mixins.CreateModelMixin,
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    pagination_class = PageNumberPagination
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -119,7 +117,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (IsOwnerOrAdminOrModerator,)
-    pagination_class = PageNumberPagination 
 
     def get_queryset(self):
         review_obj = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
@@ -139,7 +136,6 @@ class UserViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete',)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
-    pagination_class = PageNumberPagination
 
     @action(
         methods=['PATCH', 'GET'],

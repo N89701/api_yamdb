@@ -151,6 +151,7 @@ class Test04TitleAPI:
 
         response = admin_client.get(f'{url}?genre={genres[1]["slug"]}')
         data = response.json()
+        print(data)
         assert len(data['results']) == 2, (
             f'Проверьте, что для эндпоинта `{url}` реализована возможность '
             'фильтрации по полю `genre` с использованием параметра `slug` '

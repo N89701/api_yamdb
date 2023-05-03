@@ -1,9 +1,9 @@
-from django.db import models
-from users.models import User
-from django.db.models import Avg
-from .validators import validate_rating
 from django.core.validators import RegexValidator
+from django.db import models
+from django.db.models import Avg
+from users.models import User
 
+from .validators import validate_rating
 
 
 class Category(models.Model):
@@ -11,7 +11,7 @@ class Category(models.Model):
     slug = models.SlugField(
         max_length=50,
         unique=True,
-        validators=[RegexValidator(r'^[-a-zA-Z0-9_]+$')] )
+        validators=[RegexValidator(r'^[-a-zA-Z0-9_]+$')])
 
 
 class Genre(models.Model):
@@ -19,7 +19,7 @@ class Genre(models.Model):
     slug = models.SlugField(
         max_length=50,
         unique=True,
-        validators=[RegexValidator(r'^[-a-zA-Z0-9_]+$')] )
+        validators=[RegexValidator(r'^[-a-zA-Z0-9_]+$')])
 
 
 class Title(models.Model):
@@ -35,7 +35,7 @@ class Title(models.Model):
 
     @property
     def rating(self):
-        return self.reviews.aggregate(Avg('score'))
+        return self.reviews.aggregate(Avg('score')).get('score__avg')
 
 
 class Review(models.Model):
