@@ -1,7 +1,8 @@
 from django.core.exceptions import ValidationError
+from datetime import datetime
 
 
-def validate_rating(value):
-    if value < 1 or value > 10:
-        raise ValidationError('Your score must be between 1 and 10 inclusive')
+def current_year(value):
+    if value > datetime.now().year:
+        raise ValidationError('Nobody can travel in the future')
     return True

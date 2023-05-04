@@ -1,48 +1,51 @@
-from django.core.validators import RegexValidator
+from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import Avg
-from users.models import User
 
-from .validators import validate_rating
+from .validators import current_year
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=256)
+    name = models.CharField(max_length=settings.MAX_LENGTH_NAME)
     slug = models.SlugField(
-        max_length=50,
-        unique=True,
-        validators=[RegexValidator(r'^[-a-zA-Z0-9_]+$')])
+        max_length=settings.MAX_LENGTH_SLUG,
+        unique=True
+    )
+
+    class Meta:
+        ordering = ('name',)
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=256)
+    name = models.CharField(max_length=settings.MAX_LENGTH_NAME)
     slug = models.SlugField(
-        max_length=50,
-        unique=True,
-        validators=[RegexValidator(r'^[-a-zA-Z0-9_]+$')])
+        max_length=settings.MAX_LENGTH_SLUG,
+        unique=True
+    )
+
+    class Meta:
+        ordering = ('name',)
 
 
 class Title(models.Model):
-    name = models.CharField(max_length=256)
-    year = models.IntegerField()
-    description = models.TextField(null=True, blank=True)
-    genre = models.ManyToManyField(Genre)
+    name = models.CharField(max_length=settings.MAX_LENGTH_NAME)
+    year = models.SmallIntegerField(db_index=True, validators=[current_year])
+    description = models.TextField(blank=True)
+    genre = models.ManyToManyField(Genre, related_name='titles')
     category = models.ForeignKey(
         Category,
         on_delete=models.CASCADE,
         related_name='titles'
     )
 
-    @property
-    def rating(self):
-        return self.reviews.aggregate(Avg('score')).get('score__avg')
+    class Meta:
+        ordering = ('name', '-year')
 
 
 class Review(models.Model):
     author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='reviews'
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
     )
     title = models.ForeignKey(
         Title,
@@ -50,7 +53,10 @@ class Review(models.Model):
         related_name='reviews'
     )
     text = models.TextField()
-    score = models.IntegerField(validators=[validate_rating])
+    score = models.SmallIntegerField(
+        validators=[MaxValueValidator(10),
+                    MinValueValidator(1)]
+    )
     pub_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -60,13 +66,13 @@ class Review(models.Model):
                 name='unique_review',
             ),
         )
+        ordering = ('pub_date',)
 
 
 class Comment(models.Model):
     author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='comments'
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
     )
     review = models.ForeignKey(
         Review,
@@ -75,3 +81,6 @@ class Comment(models.Model):
     )
     text = models.TextField()
     pub_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('pub_date',)

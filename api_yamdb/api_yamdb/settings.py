@@ -1,4 +1,3 @@
-import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -27,8 +26,9 @@ INSTALLED_APPS = [
     'django_filters',
     # Локальные приложения
     'reviews.apps.ReviewsConfig',
-    'api.apps.ApiConfig',
     'users.apps.UsersConfig',
+    'api.apps.ApiConfig',
+
 ]
 
 MIDDLEWARE = [
@@ -122,8 +122,10 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 DEFAULT_FROM_EMAIL = 'black.yamdb@example.com'
 
 # Constants
 CONFIRM_CODE_LENGTH = 15
+MAX_LENGTH_NAME = 256
+MAX_LENGTH_SLUG = 50
