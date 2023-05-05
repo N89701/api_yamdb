@@ -1,20 +1,27 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.shortcuts import get_object_or_404
+
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CurrentUserDefault
 from rest_framework.relations import SlugRelatedField
+
 from reviews.models import Category, Comment, Genre, Review, Title
-from users.models import User
+
+User = get_user_model()
 
 
 class SignupSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True,
-                                   max_length=254,
-                                   )
-    username = serializers.CharField(required=True,
-                                     max_length=150,
-                                     validators=[UnicodeUsernameValidator()])
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+        validators=[UnicodeUsernameValidator()]
+    )
+    email = serializers.EmailField(
+        required=True,
+        max_length=254,
+    )
 
     def validate_username(self, value):
         if value == 'me':
@@ -23,31 +30,27 @@ class SignupSerializer(serializers.Serializer):
             )
         return value
 
-    class Meta:
-        fields = (
-            'username',
-            'email',
-        )
 
-
-class TokenObtainSerializer(serializers.ModelSerializer):
-    username = serializers.CharField()
-    confirmation_code = serializers.CharField()
-
-    class Meta:
-        model = User
-        fields = ('username', 'confirmation_code')
+class TokenObtainSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        required=True,
+        max_length=150,
+        validators=[UnicodeUsernameValidator()]
+    )
+    confirmation_code = serializers.CharField(
+        required=True,
+    )
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        exclude = ['id']
+        exclude = ('id',)
         model = Category
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
-        exclude = ['id']
+        exclude = ('id',)
         model = Genre
 
 
@@ -68,9 +71,9 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class TitleGetSerializer(serializers.ModelSerializer):
-    category = CategorySerializer()
-    genre = GenreSerializer(many=True,)
-    rating = serializers.IntegerField()
+    category = CategorySerializer(read_only=True)
+    genre = GenreSerializer(read_only=True, many=True)
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         fields = '__all__'
@@ -82,10 +85,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True,
         slug_field='username',
         default=CurrentUserDefault()
-    )
-    title = serializers.SlugRelatedField(
-        slug_field='name',
-        read_only=True
     )
 
     def validate(self, attrs):
@@ -100,8 +99,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
 
     class Meta:
-        fields = '__all__'
-        read_only_fields = ('author', 'title',)
+        exclude = ('title',)
         model = Review
 
 
@@ -113,7 +111,7 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        exclude = ['review']
+        exclude = ('review',)
         read_only_fields = ('author', 'review',)
         model = Comment
 
