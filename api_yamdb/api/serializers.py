@@ -3,11 +3,11 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.shortcuts import get_object_or_404
 
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CurrentUserDefault
 from rest_framework.relations import SlugRelatedField
 
 from reviews.models import Category, Comment, Genre, Review, Title
+from users.validators import username_validator
 
 User = get_user_model()
 
@@ -16,26 +16,32 @@ class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(
         required=True,
         max_length=150,
-        validators=[UnicodeUsernameValidator()]
+        validators=(UnicodeUsernameValidator(), username_validator,)
     )
     email = serializers.EmailField(
         required=True,
         max_length=254,
     )
 
-    def validate_username(self, value):
-        if value == 'me':
-            raise ValidationError(
-                '"me" - запрещено использовать как имя пользователя'
-            )
-        return value
+    def validate(self, attrs):
+        if User.objects.filter(
+            username=attrs.get('username'), email=attrs.get('email')
+        ).exists():
+            return attrs
+        if User.objects.filter(username=attrs.get('username')).exists():
+            raise serializers.ValidationError(
+                'Username already exists!')
+        if User.objects.filter(email=attrs.get('email')).exists():
+            raise serializers.ValidationError(
+                'Email already exists!')
+        return super().validate(attrs)
 
 
 class TokenObtainSerializer(serializers.Serializer):
     username = serializers.CharField(
         required=True,
         max_length=150,
-        validators=[UnicodeUsernameValidator()]
+        validators=(UnicodeUsernameValidator(), username_validator,)
     )
     confirmation_code = serializers.CharField(
         required=True,
@@ -118,11 +124,11 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
 
-    def update(self, instance, validated_data):
-        validated_data.pop('role', None)
-        return super().update(instance, validated_data)
-
     class Meta:
         fields = ('username', 'email', 'first_name', 'last_name',
                   'bio', 'role',)
         model = User
+
+
+class UserMeSerializer(UserSerializer):
+    role = serializers.CharField(read_only=True)

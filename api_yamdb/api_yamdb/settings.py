@@ -126,6 +126,5 @@ EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 DEFAULT_FROM_EMAIL = 'black.yamdb@example.com'
 
 # Constants
-CONFIRM_CODE_LENGTH = 15
 MAX_LENGTH_NAME = 256
 MAX_LENGTH_SLUG = 50

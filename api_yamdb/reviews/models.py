@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .validators import current_year
+from reviews.validators import current_year
 
 
 class Category(models.Model):

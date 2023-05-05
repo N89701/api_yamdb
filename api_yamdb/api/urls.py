@@ -1,6 +1,5 @@
-# Django
 from django.urls import include, path
-# Django DRF
+
 from rest_framework.routers import DefaultRouter
 
 from api import views
