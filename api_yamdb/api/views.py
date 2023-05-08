@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import action, api_view
@@ -15,7 +14,7 @@ from api.permissions import (IsAdminOrReadOnly, IsAdminUser,
 from api.serializers import (CategorySerializer, CommentSerializer,
                              GenreSerializer, ReviewSerializer,
                              SignupSerializer, TitleGetSerializer,
-                             TitleSerializer, TokenObtainSerializer,
+                             TitleCreateSerializer, TokenObtainSerializer,
                              UserSerializer, UserMeSerializer)
 from reviews.models import Category, Genre, Review, Title
 
@@ -28,7 +27,7 @@ def signup(request):
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data.get('username')
     email = serializer.validated_data.get('email')
-    user, created = User.objects.get_or_create(
+    user, _created = User.objects.get_or_create(
         username=username, email=email)
     confirmation_code = default_token_generator.make_token(user)
     user.email_user('Код подтверждения', confirmation_code)
@@ -48,32 +47,32 @@ def obtain_token(request):
     return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
 
-class CatalogViewSet(mixins.CreateModelMixin,
-                     mixins.DestroyModelMixin,
-                     mixins.ListModelMixin,
-                     viewsets.GenericViewSet):
+class CategoryGenreViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin,
+                           mixins.ListModelMixin, viewsets.GenericViewSet):
     lookup_field = 'slug'
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
 
-class CategoryViewSet(CatalogViewSet):
+class CategoryViewSet(CategoryGenreViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
-class GenreViewSet(CatalogViewSet):
+class GenreViewSet(CategoryGenreViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
-class BaseViewSet(viewsets.ModelViewSet):
+class WithoutPutViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete',)
 
 
-class TitleViewSet(BaseViewSet):
-    queryset = Title.objects.annotate(rating=Avg('reviews__score')).all()
+class TitleViewSet(WithoutPutViewSet):
+    queryset = Title.objects.annotate(rating=Avg('reviews__score')).order_by(
+        'rating'
+    ).all()
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -81,10 +80,10 @@ class TitleViewSet(BaseViewSet):
     def get_serializer_class(self):
         if self.request.method in permissions.SAFE_METHODS:
             return TitleGetSerializer
-        return TitleSerializer
+        return TitleCreateSerializer
 
 
-class ReviewViewSet(BaseViewSet):
+class ReviewViewSet(WithoutPutViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (IsOwnerOrAdminOrModerator,)
 
@@ -101,7 +100,7 @@ class ReviewViewSet(BaseViewSet):
         )
 
 
-class CommentViewSet(BaseViewSet):
+class CommentViewSet(WithoutPutViewSet):
     serializer_class = CommentSerializer
     permission_classes = (IsOwnerOrAdminOrModerator,)
 
@@ -109,7 +108,7 @@ class CommentViewSet(BaseViewSet):
         return get_object_or_404(
             Review,
             pk=self.kwargs.get('review_id'),
-            title=self.kwargs.get('title_id')
+            title_id=self.kwargs.get('title_id')
         )
 
     def get_queryset(self):
@@ -122,7 +121,7 @@ class CommentViewSet(BaseViewSet):
         )
 
 
-class UserViewSet(BaseViewSet):
+class UserViewSet(WithoutPutViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'username'

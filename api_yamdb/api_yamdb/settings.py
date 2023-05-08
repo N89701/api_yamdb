@@ -128,3 +128,4 @@ DEFAULT_FROM_EMAIL = 'black.yamdb@example.com'
 # Constants
 MAX_LENGTH_NAME = 256
 MAX_LENGTH_SLUG = 50
+MAX_LENGTH_USERNAME = 150

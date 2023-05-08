@@ -3,14 +3,42 @@
 API_YAMDB is a project-data base of products of literature, cinematography, art and other culture spheres.
 On this resource you can get/add information about the products you are interested in: read a reviews about this products and learn an opinion of other people, also add your own comment or review.  
 
-## Installing on the local machine
-1. clone this repository (git clone git@github.com:N89701/api_yamdb.git)
-2. create venv and activate it (python -m venv venv; source venv/Scripts/activate or source venv/bin/activate for Mac)
-3. install all the requirements from requirements.txt (pip install -r requirements.txt)
-4. Follow to the working directory(cd api_yamdb) 
-5. Load csv-data to database on your local computer (python manage.py load_data)
-6. run server (python manage.py runserver)
-7. Complete. App ready to use it
+## Installing on the local machine (All commands in cmd/bash)
+1. clone this repository 
+```
+git clone git@github.com:N89701/api_yamdb.git
+```
+2. create venv and activate it 
+```
+python -m venv 
+```
+```
+venv source venv/Scripts/activate or source venv/bin/activate for Mac and Linux
+```
+3. install all the requirements from requirements.txt 
+```
+pip install -r requirements.txt
+```
+4. Follow to the working directory
+```
+cd api_yamdb
+``` 
+5. Migrate data-base
+```
+python manage.py makemigrations
+``` 
+```
+python manage.py migrate
+``` 
+6. Load csv-data to database on your local computer 
+```
+python manage.py load_data
+``` 
+7. run server 
+```
+python manage.py runserver
+```
+8. Complete. App is ready to use it
 
 ## Examples of requests
 It is a 5 roles of users in this project:

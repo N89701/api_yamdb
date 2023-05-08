@@ -1,11 +1,10 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.shortcuts import get_object_or_404
-
 from rest_framework import serializers
 from rest_framework.fields import CurrentUserDefault
 from rest_framework.relations import SlugRelatedField
-
 from reviews.models import Category, Comment, Genre, Review, Title
 from users.validators import username_validator
 
@@ -15,7 +14,7 @@ User = get_user_model()
 class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(
         required=True,
-        max_length=150,
+        max_length=settings.MAX_LENGTH_USERNAME,
         validators=(UnicodeUsernameValidator(), username_validator,)
     )
     email = serializers.EmailField(
@@ -40,7 +39,7 @@ class SignupSerializer(serializers.Serializer):
 class TokenObtainSerializer(serializers.Serializer):
     username = serializers.CharField(
         required=True,
-        max_length=150,
+        max_length=settings.MAX_LENGTH_USERNAME,
         validators=(UnicodeUsernameValidator(), username_validator,)
     )
     confirmation_code = serializers.CharField(
@@ -60,7 +59,7 @@ class GenreSerializer(serializers.ModelSerializer):
         model = Genre
 
 
-class TitleSerializer(serializers.ModelSerializer):
+class TitleCreateSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Category.objects.all()
@@ -94,12 +93,13 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     def validate(self, attrs):
+        method = self.context.get('request').method
+        if method != 'POST':
+            return super().validate(attrs)
         author = self.context.get('request').user
         title_id = self.context.get('view').kwargs['title_id']
-        method = self.context.get('request').method
         title = get_object_or_404(Title, pk=title_id)
-        if (Review.objects.filter(author=author, title=title).exists()
-                and method == 'POST'):
+        if Review.objects.filter(author=author, title=title).exists():
             raise serializers.ValidationError(
                 'Можно оставить только один отзыв на произведение!')
         return super().validate(attrs)
@@ -113,12 +113,10 @@ class CommentSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(
         read_only=True,
         slug_field='username',
-        default=CurrentUserDefault()
     )
 
     class Meta:
         exclude = ('review',)
-        read_only_fields = ('author', 'review',)
         model = Comment
 
 

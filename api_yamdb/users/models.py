@@ -1,6 +1,8 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
+
 
 from users.validators import username_validator
 
@@ -17,13 +19,12 @@ USER_ROLES = [
 
 class User(AbstractUser):
     username = models.CharField(
-        max_length=150,
+        max_length=settings.MAX_LENGTH_USERNAME,
         unique=True,
         validators=(UnicodeUsernameValidator(), username_validator,),
     )
     email = models.EmailField(
         verbose_name='Электронная почта',
-        blank=False,
         unique=True,
     )
     role = models.CharField(
@@ -36,6 +37,9 @@ class User(AbstractUser):
         'Биография',
         blank=True,
     )
+
+    class Meta:
+        ordering = ('username',)
 
     @property
     def is_admin(self):
