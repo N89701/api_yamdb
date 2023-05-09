@@ -22,19 +22,6 @@ class SignupSerializer(serializers.Serializer):
         max_length=254,
     )
 
-    def validate(self, attrs):
-        if User.objects.filter(
-                username=attrs.get('username'), email=attrs.get('email')
-        ).exists():
-            return attrs
-        if User.objects.filter(username=attrs.get('username')).exists():
-            raise serializers.ValidationError(
-                'Username already exists!')
-        if User.objects.filter(email=attrs.get('email')).exists():
-            raise serializers.ValidationError(
-                'Email already exists!')
-        return super().validate(attrs)
-
 
 class TokenObtainSerializer(serializers.Serializer):
     username = serializers.CharField(
