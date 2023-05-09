@@ -24,7 +24,7 @@ class SignupSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         if User.objects.filter(
-            username=attrs.get('username'), email=attrs.get('email')
+                username=attrs.get('username'), email=attrs.get('email')
         ).exists():
             return attrs
         if User.objects.filter(username=attrs.get('username')).exists():
@@ -121,7 +121,6 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     class Meta:
         fields = ('username', 'email', 'first_name', 'last_name',
                   'bio', 'role',)
@@ -129,4 +128,5 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserMeSerializer(UserSerializer):
-    role = serializers.CharField(read_only=True)
+    class Meta(UserSerializer.Meta):
+        read_only_fields = ('role',)
