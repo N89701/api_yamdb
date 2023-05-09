@@ -29,7 +29,10 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.CharField(max_length=settings.MAX_LENGTH_NAME)
-    year = models.PositiveSmallIntegerField(db_index=True, validators=[current_year])
+    year = models.PositiveSmallIntegerField(
+        db_index=True,
+        validators=[current_year]
+    )
     description = models.TextField(blank=True)
     genre = models.ManyToManyField(Genre, related_name='titles')
     category = models.ForeignKey(
