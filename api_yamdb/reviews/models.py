@@ -29,7 +29,7 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.CharField(max_length=settings.MAX_LENGTH_NAME)
-    year = models.PositiveSmallIntegerField(
+    year = models.SmallIntegerField(
         db_index=True,
         validators=[current_year]
     )
